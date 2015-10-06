@@ -10,6 +10,8 @@ public class TilleMapEditor : MonoBehaviour
     public int height;
     public int TileSize;
 
+    public int layer;
+
     public float TileWidth
     {
         get

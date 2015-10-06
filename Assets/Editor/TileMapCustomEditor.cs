@@ -15,7 +15,7 @@ public class TileMapCustomEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        //DrawDefaultInspector();
 
         if (GUILayout.Button("Refresh Tile Prefabs"))
         {
@@ -27,6 +27,21 @@ public class TileMapCustomEditor : Editor
         GUILayout.Label("Tiles");
         selectedTileIndex = GUILayout.SelectionGrid(selectedTileIndex, editor.tileTextures, 5);
         GUILayout.EndVertical();
+
+        GUIStyle style = new GUIStyle();
+        style.alignment = TextAnchor.MiddleCenter;
+
+        // change tile layer
+        GUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("-"))
+            editor.layer--;
+        GUILayout.Label("Layer: " + editor.layer, style);
+        if (GUILayout.Button("+"))
+            editor.layer++;
+
+        GUILayout.EndHorizontal();
+
 
         if (GUI.changed)
             Repaint();
@@ -42,13 +57,14 @@ public class TileMapCustomEditor : Editor
         // left mouse button to create tile
         if (e.isMouse && e.button == 0 && (e.type == EventType.MouseDown || e.type == EventType.MouseDrag))
         {
-            // always positive
+            // keep in side of grid canvas
             if (mousePos.x < 0 || mousePos.y < 0)
                 return;
 
             if (Mathf.Floor(mousePos.x / editor.TileSize) >= editor.width - 1 || Mathf.Floor(mousePos.y / editor.TileSize) >= editor.height - 1)
                 return;
 
+            // register control
             GUIUtility.hotControl = controlled;
             e.Use();
 
@@ -61,14 +77,19 @@ public class TileMapCustomEditor : Editor
 
                 Vector2 allignPos = new Vector2(Mathf.Floor(mousePos.x / editor.TileSize) * editor.TileSize + editor.TileSize / 2, Mathf.Floor(mousePos.y / editor.TileSize) * editor.TileSize + editor.TileSize / 2);
 
+                // create tile
+                tileObj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                tileObj.GetComponent<SpriteRenderer>().sortingOrder = editor.layer;
+
                 // there is a tile already
                 GameObject obj = GetObjFromPosition(allignPos);
                 if (obj != null)
                 {
-                    DestroyImmediate(obj);
+                    // if same layer
+                    if (obj.GetComponent<SpriteRenderer>().sortingOrder == tileObj.GetComponent<SpriteRenderer>().sortingOrder)
+                        DestroyImmediate(obj);
                 }
 
-                tileObj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
                 tileObj.transform.position = allignPos;
 
                 // regsiter ctrl + z
